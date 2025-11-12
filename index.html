@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Comunidad Piura (Halloween B/N)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcReMJly0vwqQtfircDFDpZwXu18Sd3bSMIOsRRLQyJ0irbFg3KC">
+
+  <!-- Fuentes opcionales -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+
+  <style>
+   .login-container h1 {
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 1px;
+  color: #fff;
+  margin-bottom: 10px;
+  text-shadow: 0 6px 18px rgba(255,255,255,0.03);
+  text-align: center; /* ✅ centrado */
+}
+
+    /* ========== RESET ========== */
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+/* si funciona */
+    /* ========== FONDO MANSIÓN BN ========== */
+    body{
+      font-family: "Inter", Arial, sans-serif;
+      background: #000;
+      color: #fff;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      overflow:hidden;
+    }
+/* si funciona */
+
+    /* contenedor principal para centrar contenido y controlar z-index */
+    .page-wrap {
+      position:relative;
+      width:100%;
+      max-width:480px;
+      z-index: 30; /* encima de canvases y particles */
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+    }
+/* si funciona */
+    /* background image de fondo en B/N, siempre detrás */
+    .bg-mansion {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-image: url('imagen1.png');
+      background-size: cover;
+      background-position: center;
+      filter: grayscale(-300%) contrast(20%) brightness(10%);
+      transform: scale(1.03);
+    }
+
+    
+/* si funciona */
+    /* canvas de niebla (animada) y particles.js */
+    canvas#fogCanvas, #particles-js {
+      position: fixed;
+      inset: 0;
+      width:100%;
+      height:100%;
+      z-index:1;
+      pointer-events: none; /* no bloquea inputs */
+    }
+
+
+  
+    
+    /* si funciona */
+    /* loader (se mantiene pero estilizado B/N) */
+    #loader {
+      position: fixed;
+      top:0; left:0; width:100%; height:100%;
+      background: rgba(0,0,0,0.8);
+      display:flex; align-items:center; justify-content:center;
+      z-index: 60;
+    }
+    /* si funciona */
+
+    #loader img { width:100px; height:100px; border-radius:50%; filter:grayscale(100%) contrast(120%); animation: spin 2.5s linear infinite; }
+    @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
+/* si funciona */
+       /* caja principal  */
+    .login-container {
+      display: none;
+      width:100%;
+      max-width:420px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:12px;
+      padding:26px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.02) inset;
+      border: 1px solid rgba(255,255,255,0.03);
+      backdrop-filter: blur(4px);
+      color:#f4f4f4;
+      z-index: 35;
+    }
+
+    /* si funciona */
+
+    .logo {
+      width:90px;
+      margin: 8px auto 18px;
+      display:block;
+      border-radius:50%;
+      filter: grayscale(10%) contrast(110%);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0);
+    }
+    /* si funciona */
+input, select {
+      width:100%;
+      padding:12px;
+      margin:8px 0;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      color:#fff;
+      outline: none;
+      font-size:14px;
+    }
+    
+    input:focus, select:focus { box-shadow: 0 6px 18px rgba(105, 32, 32, 0) inset; }
+
+    .btn { width:100%; padding:14px; margin-top:10px; border-radius:10px; cursor:pointer; border:none; font-weight:700; }
+    .btn-login { background: #fff; color:#000; }
+    .btn-register { background: #111; color:#fff; border:1px solid rgba(255,255,255,0.06); }
+
+    .toggle { color: #ddd; text-align:center; margin-top:10px; cursor:pointer; font-size:0.95rem; text-decoration:underline; }
+
+    /* mensaje exito */
+    .success-popup { position: fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:70; background: rgba(0,0,0,0.6); }
+    .success-content { padding:26px 34px; border-radius:12px; background: linear-gradient(180deg,#111,#222); border:1px solid rgba(255,255,255,0.04); color:#fff; }
+
+    /* estilos accesibilidad/pequeños */
+    #error, #errorRegister { color:#ffdddd; font-size:13px; margin-top:6px; display:none; }
+    #strengthBar { height:6px; border-radius:3px; margin-top:6px; background:#111; }
+
+    @media (max-width:560px){
+      .web-decor.left{width:120px} .web-decor.right{width:140px}
+      .login-container{padding:18px}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ====== FONDOS Y ELEMENTOS VISUALES (no interfieren JS) ====== -->
+  <div class="bg-mansion" aria-hidden="true"></div>
+
+  <!-- decoraciones fijas telarañas (imágenes públicas) -->
+  <img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Spider_web.svg" alt="" class="web-decor left" aria-hidden="true">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Spider_web_2.svg" alt="" class="web-decor right" aria-hidden="true">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/6/6c/Spider_web_3.svg" alt="" class="web-decor top-right" aria-hidden="true">
+
+  <!-- canvas para niebla animada -->
+  <canvas id="fogCanvas" aria-hidden="true"></canvas>
+
+  <!-- particles.js (telaraña interactiva que sigue el mouse) -->
+  <div id="particles-js" aria-hidden="true"></div>
+
+  <!-- loader (mantenido) -->
+  <div id="loader">
+    <img src="Gemini_Generated_Image_xutkucxutkucxutk.png" alt="Logo">
+  </div>
+
+  <!-- EXITO -->
+  <div id="successMessage" class="success-popup" aria-live="polite">
+    <div class="success-content">
+      <span style="font-size:36px;color:#fff;display:block;margin-bottom:8px">✔</span>
+      <p style="margin:0;color:#fff">Datos guardados correctamente</p>
+    </div>
+  </div>
+
+  <!-- ====== CONTENIDO (mantengo estructura, IDs y nombres tal cual) ====== -->
+  <div class="page-wrap">
+    <div id="loginBox" class="login-container" aria-labelledby="loginTitle">
+      <h1 id="loginTitle">Acceda a su</h1>
+      <img src="Gemini_Generated_Image_xutkucxutkucxutk.png" class="logo" alt="Logo Comunidad Piura">
+
+      <form id="loginForm">
+        <input type="email" id="loginEmail" placeholder="Correo electrónico" required>
+        <div style="position: relative;">
+          <input type="password" id="loginPassword" placeholder="Contraseña" required>
+          <span onclick="togglePassword('loginPassword')" 
+            style="position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer; color:#fff;">👁️</span>
+        </div>
+        <p id="error"></p>
+        <button type="submit" class="btn btn-login">Ingresar</button>
+      </form>
+
+      <div class="toggle" onclick="showRegister()">¿No tienes cuenta? Regístrate</div>
+      <div class="toggle" onclick="resetPassword()">¿Olvidaste tu contraseña?</div>
+    </div>
+
+    <div id="registerBox" class="login-container" aria-labelledby="registerTitle">
+      <h1 id="registerTitle">Crear Cuenta</h1>
+      <img src="https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcReMJly0vwqQtfircDFDpZwXu18Sd3bSMIOsRRLQyJ0irbFg3KC" class="logo" alt="Logo">
+
+      <form id="registerForm">
+        <input type="text" id="nombre" placeholder="Nombre" required>
+        <input type="text" id="apellidos" placeholder="Apellidos" required>
+        <input type="email" id="registerEmail" placeholder="Correo electrónico" required>
+        <input type="password" id="registerPassword" placeholder="Contraseña" required oninput="checkStrength(this.value)">
+        <div id="strengthBar" style="height:6px; border-radius:3px; margin-top:5px; background:#222;"></div>
+
+  
+        </select>
+        <p id="errorRegister"></p>
+        <button type="submit" class="btn btn-register">Crear Cuenta</button>
+      </form>
+
+      <div class="toggle" onclick="showLogin()">¿Ya tienes cuenta? Inicia sesión</div>
+    </div>
+  </div>
+
+  <!-- ========== LIBRERÍAS VISUALES ========== -->
+  <!-- particles.js (CDN) -->
+  <script src="https://cdn.jsdelivr.net/gh/VincentGarreau/particles.js/particles.min.js"></script>
+
+  <!-- ========== JAVASCRIPT ORIGINAL  ========== -->
+  
+  <script type="module">
+  import { 
+    initializeApp 
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { 
+    getAuth, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, 
+    sendPasswordResetEmail, 
+    sendEmailVerification,
+    setPersistence, 
+    browserSessionPersistence 
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    setDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // 🔧 CONFIG FIREBASE
+  const firebaseConfig = {
+    apiKey: "AIzaSyD33P7MvrIGbNo1lRSbZBXb4hZoQ_dkjVg",
+    authDomain: "comunidadpiura-fed53.firebaseapp.com",
+    projectId: "comunidadpiura-fed53",
+    storageBucket: "comunidadpiura-fed53.firebasestorage.app",
+    messagingSenderId: "113288016871",
+    appId: "1:113288016871:web:f94f6c6490bcdbca0bc342",
+    measurementId: "G-68EYEMSET9"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // 🔒 LOGIN (solo si el correo está verificado)
+  document.getElementById("loginForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+
+    setPersistence(auth, browserSessionPersistence)
+      .then(() => signInWithEmailAndPassword(auth, email, password))
+      .then(({ user }) => {
+        if (user.emailVerified) {
+          window.location.href = "home.html"; // ✅ entra solo si está verificado
+        } else {
+          auth.signOut();
+          document.getElementById("error").style.display = "block";
+          document.getElementById("error").innerText = 
+            "⚠️ Verifica tu correo antes de iniciar sesión. Revisa también 'Correo no deseado'.";
+        }
+      })
+      .catch(err => {
+        document.getElementById("error").style.display = "block";
+        document.getElementById("error").innerText = err.message;
+      });
+  });
+
+  // 🧾 REGISTRO CON VERIFICACIÓN DE CORREO
+  document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const nombre = document.getElementById("nombre").value;
+    const apellidos = document.getElementById("apellidos").value;
+    const email = document.getElementById("registerEmail").value;
+    const password = document.getElementById("registerPassword").value;
+    const celular = document.getElementById("celular").value;
+    const departamento = document.getElementById("departamento").value;
+    const provincia = document.getElementById("provincia").value;
+    const distrito = document.getElementById("distrito").value;
+    const genero = document.getElementById("genero").value;
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 📩 Enviar correo de verificación
+      await sendEmailVerification(user);
+
+      // 📄 Guardar datos en Firestore
+      await setDoc(doc(db, "usuarios", user.uid), {
+        nombre,
+        apellidos,
+        email,
+        fechaRegistro: new Date().toISOString(),
+        verificado: false
+      });
+
+      showSuccess();
+
+      // 🔔 Mostrar mensaje al usuario
+      alert("Se ha enviado un enlase de verificación a tu correo.\nVerifica en 'No deseados' si no lo ves.");
+
+      // ❌ Cerrar sesión hasta que confirme
+      setTimeout(() => {
+        auth.signOut();
+        showLogin();
+      }, 3000);
+
+    } catch (error) {
+      document.getElementById("errorRegister").style.display = "block";
+      document.getElementById("errorRegister").innerText = error.message;
+    }
+  });
+
+  // 🔄 RECUPERAR CONTRASEÑA
+  window.resetPassword = function() {
+    const email = prompt("Ingresa tu correo para recuperar tu contraseña:");
+    if (email) {
+      sendPasswordResetEmail(auth, email)
+        .then(() => alert("📧 Se ha enviado un enlace de recuperación a tu correo."))
+        .catch(err => alert(err.message));
+    }
+  };
+
+  // 🧭 MOSTRAR/OCULTAR SECCIONES
+  window.showRegister = function() {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("registerBox").style.display = "block";
+  };
+
+  window.showLogin = function() {
+    document.getElementById("registerBox").style.display = "none";
+    document.getElementById("loginBox").style.display = "block";
+  };
+
+  // 👁️ MOSTRAR/OCULTAR CONTRASEÑA
+  window.togglePassword = function(id) {
+    const input = document.getElementById(id);
+    input.type = input.type === "password" ? "text" : "password";
+  };
+
+  // 💪 BARRA DE FUERZA
+  window.checkStrength = function(password) {
+    const bar = document.getElementById("strengthBar");
+    let strength = 0;
+    if (password.length > 5) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    const colors = ["#ef4444","#f97316","#facc15","#22c55e"];
+    bar.style.background = colors[strength-1] || "#222";
+    bar.style.width = (strength*25) + "%";
+  };
+
+  // ⏳ LOADER
+  window.onload = function() {
+    setTimeout(() => {
+      const loader = document.getElementById('loader');
+      loader.style.opacity = "0";
+      setTimeout(() => {
+        loader.style.display = 'none';
+        document.getElementById('loginBox').style.display = 'block';
+      }, 1000);
+    }, 2000);
+  };
+
+  // ✅ MENSAJE BONITO DE ÉXITO
+  window.showSuccess = function() {
+    const msg = document.getElementById("successMessage");
+    msg.style.display = "flex";
+    setTimeout(() => {
+      msg.style.display = "none";
+    }, 2000);
+  };
+  </script>
+
+  <!-- ========== SCRIPT VISUAL (niebla + particles telaraña) ========== -->
+  <script>
+    /* ---------------- NIEBLA EN CANVAS (no interfiere con tu JS) -------------- */
+    (function(){
+      const canvas = document.getElementById('fogCanvas');
+      const ctx = canvas.getContext('2d');
+      let w = canvas.width = window.innerWidth;
+      let h = canvas.height = window.innerHeight;
+
+      // crear capas de niebla
+      const layers = [];
+      for(let i=0;i<3;i++){
+        layers.push({
+          x: Math.random()*w,
+          y: Math.random()*h,
+          s: 0.5 + Math.random()*1.2,
+          a: 0.02 + Math.random()*0.06,
+          img: null
+        });
+      }
+
+      // dibuja niebla con gradientes suaves
+      function drawFog(){
+        ctx.clearRect(0,0,w,h);
+        for(let i=0;i<layers.length;i++){
+          const L=layers[i];
+          const grd = ctx.createRadialGradient(L.x, L.y, 30, L.x, L.y, Math.max(w,h)/1.2);
+          ctx.globalCompositeOperation = 'lighter';
+          grd.addColorStop(0, 'rgba(255,255,255,'+ (L.a*0.55) +')');
+          grd.addColorStop(0.6, 'rgba(255,255,255,'+ (L.a*0.06) +')');
+          grd.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = grd;
+          ctx.fillRect(0,0,w,h);
+          ctx.globalCompositeOperation = 'source-over';
+        }
+      }
+
+      function updateFog(){
+        for(let i=0;i<layers.length;i++){
+          const L=layers[i];
+          L.x += Math.sin((Date.now()/10000) + i) * 0.2 * L.s;
+          L.y += Math.cos((Date.now()/9000) + i) * 0.15 * L.s;
+        }
+        drawFog();
+        requestAnimationFrame(updateFog);
+      }
+
+      window.addEventListener('resize', ()=>{
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+      });
+
+      updateFog();
+    })();
+
+    /* ------------- particles.js: telaraña interactiva -------------- */
+    // se ejecuta después de que particles.js se cargue; si no está disponible, no rompe nada
+    (function(){
+      function initParticles(){
+        if (typeof particlesJS === 'undefined') return;
+        particlesJS('particles-js', {
+          "particles": {
+            "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+            "color": { "value": "#ffffff" },
+            "shape": { "type": "circle" },
+            "opacity": { "value": 0.6, "random": false },
+            "size": { "value": 2.2, "random": true },
+            "line_linked": {
+              "enable": true,
+              "distance": 140,
+              "color": "#ffffff",
+              "opacity": 0.35,
+              "width": 0.8
+            },
+            "move": {
+              "enable": true,
+              "speed": 3.0,
+              "direction": "none",
+              "random": false,
+              "straight": false,
+              "out_mode": "out",
+              "bounce": false
+            }
+          },
+          "interactivity": {
+            "detect_on": "canvas",
+            "events": {
+              "onhover": { "enable": true, "mode": "grab" },
+              "onclick": { "enable": true, "mode": "repulse" },
+              "resize": true
+            },
+            "modes": {
+              "grab": { "distance": 160, "line_linked": { "opacity": 0.6 } },
+              "repulse": { "distance": 200, "duration": 0.4 }
+            }
+          },
+          "retina_detect": true
+        });
+      }
+
+      // si particlesJS ya está listo
+      if (typeof particlesJS !== 'undefined') {
+        initParticles();
+      } else {
+        // si aún no cargó la librería, esperar brevemente
+        let tries = 0;
+        const timer = setInterval(function(){
+          tries++;
+          if (typeof particlesJS !== 'undefined'){ clearInterval(timer); initParticles(); }
+          if (tries > 20) clearInterval(timer);
+        }, 200);
+      }
+    })();
+
+    /* Notas:
+       - Todos los scripts visuales usan closures y eventListeners para evitar colisiones con tus funciones.
+       - pointer-events: none en canvases y particles evita bloquear inputs y formularios.
+    */
+  </script>
+
+</body>
+</html>
