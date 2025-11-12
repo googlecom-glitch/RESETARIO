@@ -295,11 +295,7 @@ input, select {
     const apellidos = document.getElementById("apellidos").value;
     const email = document.getElementById("registerEmail").value;
     const password = document.getElementById("registerPassword").value;
-    const celular = document.getElementById("celular").value;
-    const departamento = document.getElementById("departamento").value;
-    const provincia = document.getElementById("provincia").value;
-    const distrito = document.getElementById("distrito").value;
-    const genero = document.getElementById("genero").value;
+    
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
